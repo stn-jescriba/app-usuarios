@@ -1,0 +1,183 @@
+name: Golden Path CI/CD - Filtro TI, QA & Produccion (GCP)
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+  workflow_dispatch:
+
+env:
+  REGION: us-central1
+  REPOSITORY: books-repo
+
+jobs:
+  # =========================================================================
+  # FASE 2: EL FILTRO DE TI (Tests, Clean Architecture y Escaneo de Secretos)
+  # =========================================================================
+  ti-gatekeeper-backend:
+    name: "Filtro TI: Backend, Clean Arch & Secretos"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Escaneo de Secretos Expuestos (Cero Exposición)
+        run: |
+          if grep -RInE "Password\s*=|User Id\s*=|AccountKey\s*=" backend/Books.Api/appsettings*.json backend/Books.Domain backend/Books.Application; then
+            echo "❌ ERROR DE SEGURIDAD: Se detectaron credenciales hardcodeadas en el código o appsettings."
+            exit 1
+          fi
+          echo "✓ Verificación de Cero Exposición de Secretos superada."
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Ejecutar Tests Unitarios y de Clean Architecture (xUnit)
+        run: dotnet test backend/ --configuration Release
+
+  ti-gatekeeper-frontend:
+    name: "Filtro TI: Frontend Tests & Build (React + TS)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 26 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run Vitest tests
+        working-directory: ./frontend
+        run: npm test
+
+      - name: Validate TypeScript & Production Build
+        working-directory: ./frontend
+        run: npm run build
+
+  # =========================================================================
+  # FASE 3: DESPLIEGUE CONTINUO AUTOMÁTICO A QA (Google Cloud Run)
+  # =========================================================================
+  deploy-qa:
+    name: "Fase 3: Deploy Automático a QA (Cloud Run)"
+    needs: [ti-gatekeeper-backend, ti-gatekeeper-frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: qa
+      url: ${{ steps.deploy-web-qa.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and Push Backend Image
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-api:${{ github.sha }}"
+          docker build -t "$IMAGE" ./backend
+          docker push "$IMAGE"
+
+      - name: Deploy Backend to Cloud Run QA
+        id: deploy-api-qa
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ github.event.repository.name }}-api-qa
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-api:${{ github.sha }}
+          secrets: ConnectionStrings__DefaultConnection=db-connection-string-qa:latest
+          flags: --allow-unauthenticated --port=8080
+
+      - name: Build and Push Frontend Image (QA)
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-web-qa:${{ github.sha }}"
+          docker build \
+            --build-arg VITE_API_URL="${{ steps.deploy-api-qa.outputs.url }}" \
+            -t "$IMAGE" ./frontend
+          docker push "$IMAGE"
+
+      - name: Deploy Frontend to Cloud Run QA
+        id: deploy-web-qa
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ github.event.repository.name }}-web-qa
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-web-qa:${{ github.sha }}
+          flags: --allow-unauthenticated --port=8080
+
+  # =========================================================================
+  # FASE 4: PASE A PRODUCCIÓN (Requiere Aprobación de 1 Clic del Senior TI)
+  # =========================================================================
+  deploy-prod:
+    name: "Fase 4: Pase a Producción (Aprobación TI)"
+    needs: [deploy-qa]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy-web-prod.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Deploy Backend to Cloud Run Production
+        id: deploy-api-prod
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ github.event.repository.name }}-api-prod
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-api:${{ github.sha }}
+          secrets: ConnectionStrings__DefaultConnection=db-connection-string-prod:latest
+          flags: --allow-unauthenticated --port=8080
+
+      - name: Build and Push Frontend Image (Production)
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-web-prod:${{ github.sha }}"
+          docker build \
+            --build-arg VITE_API_URL="${{ steps.deploy-api-prod.outputs.url }}" \
+            -t "$IMAGE" ./frontend
+          docker push "$IMAGE"
+
+      - name: Deploy Frontend to Cloud Run Production
+        id: deploy-web-prod
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ github.event.repository.name }}-web-prod
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-web-prod:${{ github.sha }}
+          flags: --allow-unauthenticated --port=8080
