@@ -76,3 +76,9 @@
 - SQL real comprobado: alta, consulta, búsqueda, edición, activación/desactivación, validaciones e índice único real. Transacción revertida y ausencia de registros de prueba verificada.
 - Documentado cómo cargar explícitamente la variable User en una terminal que no la heredó y cómo ejecutar la prueba SQL optativa. Las pruebas habituales/CI omiten esa prueba para no requerir conexiones externas.
 - Invitación de 888Leonidas888 comprobada: sigue pendiente; production conserva al revisor stn-jescriba. Esa aceptación depende del destinatario. Sin fusión ni despliegue.
+
+### Cierre de revisión de producción (2026-11-16)
+- El usuario confirmó que 888Leonidas888 aceptó la invitación; GitHub verificó permiso write y ninguna invitación pendiente.
+- El usuario autorizó explícitamente reemplazar stn-jescriba por 888Leonidas888 como revisor obligatorio de production y bloquear la autoaprobación.
+- Cambio aplicado mediante API de GitHub y verificado con una consulta independiente: required_reviewers = 888Leonidas888; prevent_self_review = true.
+- Documentación y PR actualizados para eliminar el pendiente de invitación. Sin cambios en código, fusión ni despliegue.

@@ -80,10 +80,10 @@ Dockerfiles multi-stage para cada servicio, Nginx con rutas SPA y docker-compose
 
 GitHub Actions ejecuta pruebas y compilación en PR. El despliegue a QA se ejecuta desde main, y producción requiere revisión. Las conexiones de nube se inyectan mediante Secret Manager; el flujo configura CORS con la URL del frontend desplegado. No se ha fusionado ni desplegado esta entrega.
 
-## Revisión de TI pendiente
-El aprovisionador rechazó conceder admin a 888Leonidas888. Se envió una invitación de colaboración con permiso de escritura, pendiente de aceptación. GitHub rechazó configurarlo como revisor; production conserva a stn-jescriba. Tras aceptar la invitación, TI debe completar la asignación de su revisor y revisar los accesos antes de desplegar. No se modificó la skill global.
+## Revisión de TI
+888Leonidas888 aceptó la invitación y tiene permiso de escritura. Con autorización explícita del usuario, production quedó configurado con 888Leonidas888 como revisor obligatorio y prevent_self_review activado. La configuración fue verificada mediante la API de GitHub. No se modificó la skill global, ni se fusionó o desplegó la entrega.
 
 ## Validación de esta entrega
 16 pruebas backend, incluida SQL Server real, y 18 frontend correctas; build de producción verificado. Migración aplicada correctamente sobre la base local configurada. API y directorio verificados en navegador sin error de conexión y sin registros de prueba persistentes. Docker no está disponible en el equipo, por lo que los contenedores requieren validación en CI/TI.
 
-Entrega para revisión: [PR #1](https://github.com/stn-jescriba/app-usuarios/pull/1), en borrador mientras TI completa los pendientes de entorno.
+Entrega para revisión: [PR #1](https://github.com/stn-jescriba/app-usuarios/pull/1), en borrador para revisión de TI.
