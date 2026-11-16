@@ -77,3 +77,5 @@ El aprovisionador rechazó conceder admin a 888Leonidas888. Se envió una invita
 
 ## Validación de esta entrega
 13 pruebas backend y 18 frontend correctas; build de producción correcto. Migración y script SQL idempotente revisados sin conexión a base de datos. Interfaz y formulario inspeccionados en navegador. Docker no está disponible en el equipo, por lo que los contenedores requieren validación en CI/TI.
+
+Entrega para revisión: [PR #1](https://github.com/stn-jescriba/app-usuarios/pull/1), en borrador mientras TI completa los pendientes de entorno.

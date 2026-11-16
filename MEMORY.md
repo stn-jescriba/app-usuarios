@@ -43,7 +43,7 @@
 - Rol es una etiqueta de registro de texto libre; este módulo administra registros y no implementa autenticación ni autorización.
 - [x] Tarea 1: generar y verificar el scaffold corporativo, contenedores y pruebas de arquitectura/salud.
 - [x] Tarea 2: implementar y probar el mantenimiento completo en las cuatro capas y React.
-- [ ] Tarea 3: verificar ejecución local, actualizar documentación y entregar PR sin fusionar.
+- [x] Tarea 3: verificar ejecución local, actualizar documentación y entregar PR sin fusionar.
 - Aprovisionamiento: el script rechazó asignar admin a 888Leonidas888; producción tiene como revisor a stn-jescriba. Pendiente corregir la revisión de TI. No se realizará despliegue ni fusión.
 - Entorno: Node 26.13.1, SDK .NET 11.0.100, runtime .NET 10.0.15; proyectos con destino net10.0.
 
@@ -59,4 +59,4 @@
 - Backend y frontend formateados. Archivos revisados: sin credenciales, conexiones ni artefactos de build versionables.
 - CI adaptado al dominio Users y CORS configurado con el origen del frontend desplegado. Contenedores preparados; Docker no disponible en este equipo, sin validación de ejecución en contenedores.
 - Gobernanza: GitHub rechazó configurar a 888Leonidas888 como revisor. Invitación de colaboración con permiso write enviada y pendiente de aceptación; producción mantiene stn-jescriba. No se debilitó esa protección. Tras aceptar, TI debe completar la asignación de revisor.
-- Pendiente de cierre: subir rama y abrir PR. Sin fusión ni despliegue.
+- Cierre: rama feat/initial-app subida y PR de borrador creado: https://github.com/stn-jescriba/app-usuarios/pull/1. Sin fusión ni despliegue. Prueba de SQL real y revisión de TI quedan como dependencias externas pendientes.
