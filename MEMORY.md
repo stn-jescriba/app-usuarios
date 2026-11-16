@@ -36,3 +36,55 @@
 - [x] **Tarea 3:** Aprobar y fusionar el Pull Request #1 de reglas y skills hacia `main`.
 - [x] **Tarea 4:** Separar bases de datos por entorno (`VicoderLocalDb` en local, `BooksDb_QA` con `db-connection-string-qa` para QA, `BooksDb_Prod` con `db-connection-string-prod` para Producción), instalar Skill Global `init-vicoder-project` y asignar a `888Leonidas888` como Revisor Obligatorio en `production`.
 - [x] **Tarea 5:** Corregir referencia directa a la imagen Docker del backend en el job `deploy-prod` de `.github/workflows/ci-cd.yml` para evitar que GitHub Actions filtre el output por contener `secrets.GCP_PROJECT_ID`.
+
+### Plan aprobado: mantenimiento de usuarios (2026-11-16)
+- Aprobación explícita del usuario: "ok, procede".
+- Alcance: listado con búsqueda; alta y edición; nombre, apellidos, correo, rol y estado; activar/desactivar; campos obligatorios y correo único.
+- Rol es una etiqueta de registro de texto libre; este módulo administra registros y no implementa autenticación ni autorización.
+- [x] Tarea 1: generar y verificar el scaffold corporativo, contenedores y pruebas de arquitectura/salud.
+- [x] Tarea 2: implementar y probar el mantenimiento completo en las cuatro capas y React.
+- [x] Tarea 3: verificar ejecución local, actualizar documentación y entregar PR sin fusionar.
+- Aprovisionamiento: el script rechazó asignar admin a 888Leonidas888; producción tiene como revisor a stn-jescriba. Pendiente corregir la revisión de TI. No se realizará despliegue ni fusión.
+- Entorno: Node 26.13.1, SDK .NET 11.0.100, runtime .NET 10.0.15; proyectos con destino net10.0.
+
+- Scaffold validado: 3 pruebas backend, 1 frontend y build frontend correctos; npm audit: 0 vulnerabilidades.
+- Decisión del usuario: usar ConnectionStrings__DefaultConnection configurada por TI. Diagnóstico inicial corregido: la variable sí existe en el ámbito User de jescriba; no era visible bajo la cuenta aislada y no fue heredada por el proceso. No se modifica su valor persistente.
+
+### Validación de la implementación
+- 13 pruebas backend correctas: arquitectura, salud, ciclo alta/consulta/edición/estado, validación, unicidad, búsqueda y metadatos SQL.
+- 18 pruebas frontend correctas: interfaz y cliente HTTP. TypeScript y build de producción correctos. npm audit: 0 vulnerabilidades al instalar.
+- Migración InitialUsers generada con EF Core 10.0.15; modelo sin cambios pendientes y script idempotente generado sin conexión a SQL Server. Crea ManagedUsers e índice único NormalizedEmail.
+- Inspección visual del directorio y formulario en navegador correcta. El error de conexión es visible y esperado mientras falta la configuración de TI.
+- Inicio real sin conexión verificado: falla explícitamente solicitando ConnectionStrings__DefaultConnection, sin crear ni modificar bases. La integración SQL real sigue pendiente de TI.
+- Backend y frontend formateados. Archivos revisados: sin credenciales, conexiones ni artefactos de build versionables.
+- CI adaptado al dominio Users y CORS configurado con el origen del frontend desplegado. Contenedores preparados; Docker no disponible en este equipo, sin validación de ejecución en contenedores.
+- Gobernanza: GitHub rechazó configurar a 888Leonidas888 como revisor. Invitación de colaboración con permiso write enviada y pendiente de aceptación; producción mantiene stn-jescriba. No se debilitó esa protección. Tras aceptar, TI debe completar la asignación de revisor.
+- Cierre: rama feat/initial-app subida y PR de borrador creado: https://github.com/stn-jescriba/app-usuarios/pull/1. Sin fusión ni despliegue. Prueba de SQL real y revisión de TI quedan como dependencias externas pendientes.
+
+### Continuación aprobada: verificación SQL real (2026-11-16)
+- Usuario: "que te falta entonces, procede con lo que te falta".
+- Plan: cargar la variable User exclusivamente en el proceso autorizado, aplicar la migración a su destino local, verificar la API y persistencia real con pruebas transaccionales, actualizar documentación y el PR existente. Sin fusión ni despliegue.
+- Diagnóstico confirmado con consultas de solo lectura: destino LocalDB, autenticación de Windows, acceso a master correcto y base configurada inexistente. El error 4060 corresponde a esa base ausente.
+- [x] Aplicar migración y comprobar inicio de la API real.
+- [x] Verificar mantenimiento completo sobre SQL Server, con rollback de registros de prueba.
+- [x] Actualizar instrucciones y PR; comprobar revisión pendiente de TI.
+
+### Resultado de la verificación SQL real
+- Base local creada y migración InitialUsers aplicada al cargar la variable de User en el proceso de la cuenta correcta. La variable persistente permanece intacta.
+- API iniciada en http://localhost:5080; health correcto. Frontend iniciado en http://localhost:5173; directorio comprobado en navegador con 0 usuarios y sin error de conexión.
+- 16 pruebas backend correctas, incluida la prueba SQL optativa y dos casos CORS para ambos orígenes locales; 18 pruebas frontend correctas.
+- SQL real comprobado: alta, consulta, búsqueda, edición, activación/desactivación, validaciones e índice único real. Transacción revertida y ausencia de registros de prueba verificada.
+- Documentado cómo cargar explícitamente la variable User en una terminal que no la heredó y cómo ejecutar la prueba SQL optativa. Las pruebas habituales/CI omiten esa prueba para no requerir conexiones externas.
+- Invitación de 888Leonidas888 comprobada: sigue pendiente; production conserva al revisor stn-jescriba. Esa aceptación depende del destinatario. Sin fusión ni despliegue.
+
+### Cierre de revisión de producción (2026-11-16)
+- El usuario confirmó que 888Leonidas888 aceptó la invitación; GitHub verificó permiso write y ninguna invitación pendiente.
+- El usuario autorizó explícitamente reemplazar stn-jescriba por 888Leonidas888 como revisor obligatorio de production y bloquear la autoaprobación.
+- Cambio aplicado mediante API de GitHub y verificado con una consulta independiente: required_reviewers = 888Leonidas888; prevent_self_review = true.
+- Documentación y PR actualizados para eliminar el pendiente de invitación. Sin cambios en código, fusión ni despliegue.
+
+### Fusión a main autorizada (2026-11-16)
+- Orden explícita del usuario: "haz el merge a main".
+- Verificación previa: PR #1 abierto y fusionable; validaciones de backend y frontend correctas; árbol de trabajo limpio.
+- Plan aprobado: cerrar el borrador, fusionar el PR mediante merge commit y comprobar el resultado en GitHub. La fusión activa QA; producción conserva la aprobación obligatoria de 888Leonidas888 y la prohibición de autoaprobación.
+- El estado final y el commit de fusión pueden consultarse en https://github.com/stn-jescriba/app-usuarios/pull/1.
