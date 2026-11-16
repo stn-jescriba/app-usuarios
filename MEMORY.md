@@ -82,3 +82,9 @@
 - El usuario autorizó explícitamente reemplazar stn-jescriba por 888Leonidas888 como revisor obligatorio de production y bloquear la autoaprobación.
 - Cambio aplicado mediante API de GitHub y verificado con una consulta independiente: required_reviewers = 888Leonidas888; prevent_self_review = true.
 - Documentación y PR actualizados para eliminar el pendiente de invitación. Sin cambios en código, fusión ni despliegue.
+
+### Fusión a main autorizada (2026-11-16)
+- Orden explícita del usuario: "haz el merge a main".
+- Verificación previa: PR #1 abierto y fusionable; validaciones de backend y frontend correctas; árbol de trabajo limpio.
+- Plan aprobado: cerrar el borrador, fusionar el PR mediante merge commit y comprobar el resultado en GitHub. La fusión activa QA; producción conserva la aprobación obligatoria de 888Leonidas888 y la prohibición de autoaprobación.
+- El estado final y el commit de fusión pueden consultarse en https://github.com/stn-jescriba/app-usuarios/pull/1.
