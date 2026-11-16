@@ -48,7 +48,7 @@
 - Entorno: Node 26.13.1, SDK .NET 11.0.100, runtime .NET 10.0.15; proyectos con destino net10.0.
 
 - Scaffold validado: 3 pruebas backend, 1 frontend y build frontend correctos; npm audit: 0 vulnerabilidades.
-- Decisión del usuario: usar la conexión que configure TI mediante ConnectionStrings__DefaultConnection. No crear ni modificar bases locales. La variable no está configurada actualmente; verificación real de SQL pendiente de TI.
+- Decisión del usuario: usar ConnectionStrings__DefaultConnection configurada por TI. Diagnóstico inicial corregido: la variable sí existe en el ámbito User de jescriba; no era visible bajo la cuenta aislada y no fue heredada por el proceso. No se modifica su valor persistente.
 
 ### Validación de la implementación
 - 13 pruebas backend correctas: arquitectura, salud, ciclo alta/consulta/edición/estado, validación, unicidad, búsqueda y metadatos SQL.
@@ -60,3 +60,19 @@
 - CI adaptado al dominio Users y CORS configurado con el origen del frontend desplegado. Contenedores preparados; Docker no disponible en este equipo, sin validación de ejecución en contenedores.
 - Gobernanza: GitHub rechazó configurar a 888Leonidas888 como revisor. Invitación de colaboración con permiso write enviada y pendiente de aceptación; producción mantiene stn-jescriba. No se debilitó esa protección. Tras aceptar, TI debe completar la asignación de revisor.
 - Cierre: rama feat/initial-app subida y PR de borrador creado: https://github.com/stn-jescriba/app-usuarios/pull/1. Sin fusión ni despliegue. Prueba de SQL real y revisión de TI quedan como dependencias externas pendientes.
+
+### Continuación aprobada: verificación SQL real (2026-11-16)
+- Usuario: "que te falta entonces, procede con lo que te falta".
+- Plan: cargar la variable User exclusivamente en el proceso autorizado, aplicar la migración a su destino local, verificar la API y persistencia real con pruebas transaccionales, actualizar documentación y el PR existente. Sin fusión ni despliegue.
+- Diagnóstico confirmado con consultas de solo lectura: destino LocalDB, autenticación de Windows, acceso a master correcto y base configurada inexistente. El error 4060 corresponde a esa base ausente.
+- [x] Aplicar migración y comprobar inicio de la API real.
+- [x] Verificar mantenimiento completo sobre SQL Server, con rollback de registros de prueba.
+- [x] Actualizar instrucciones y PR; comprobar revisión pendiente de TI.
+
+### Resultado de la verificación SQL real
+- Base local creada y migración InitialUsers aplicada al cargar la variable de User en el proceso de la cuenta correcta. La variable persistente permanece intacta.
+- API iniciada en http://localhost:5080; health correcto. Frontend iniciado en http://localhost:5173; directorio comprobado en navegador con 0 usuarios y sin error de conexión.
+- 16 pruebas backend correctas, incluida la prueba SQL optativa y dos casos CORS para ambos orígenes locales; 18 pruebas frontend correctas.
+- SQL real comprobado: alta, consulta, búsqueda, edición, activación/desactivación, validaciones e índice único real. Transacción revertida y ausencia de registros de prueba verificada.
+- Documentado cómo cargar explícitamente la variable User en una terminal que no la heredó y cómo ejecutar la prueba SQL optativa. Las pruebas habituales/CI omiten esa prueba para no requerir conexiones externas.
+- Invitación de 888Leonidas888 comprobada: sigue pendiente; production conserva al revisor stn-jescriba. Esa aceptación depende del destinatario. Sin fusión ni despliegue.
