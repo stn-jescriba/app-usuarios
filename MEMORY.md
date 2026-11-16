@@ -36,3 +36,27 @@
 - [x] **Tarea 3:** Aprobar y fusionar el Pull Request #1 de reglas y skills hacia `main`.
 - [x] **Tarea 4:** Separar bases de datos por entorno (`VicoderLocalDb` en local, `BooksDb_QA` con `db-connection-string-qa` para QA, `BooksDb_Prod` con `db-connection-string-prod` para Producción), instalar Skill Global `init-vicoder-project` y asignar a `888Leonidas888` como Revisor Obligatorio en `production`.
 - [x] **Tarea 5:** Corregir referencia directa a la imagen Docker del backend en el job `deploy-prod` de `.github/workflows/ci-cd.yml` para evitar que GitHub Actions filtre el output por contener `secrets.GCP_PROJECT_ID`.
+
+### Plan aprobado: mantenimiento de usuarios (2026-11-16)
+- Aprobación explícita del usuario: "ok, procede".
+- Alcance: listado con búsqueda; alta y edición; nombre, apellidos, correo, rol y estado; activar/desactivar; campos obligatorios y correo único.
+- Rol es una etiqueta de registro de texto libre; este módulo administra registros y no implementa autenticación ni autorización.
+- [x] Tarea 1: generar y verificar el scaffold corporativo, contenedores y pruebas de arquitectura/salud.
+- [x] Tarea 2: implementar y probar el mantenimiento completo en las cuatro capas y React.
+- [ ] Tarea 3: verificar ejecución local, actualizar documentación y entregar PR sin fusionar.
+- Aprovisionamiento: el script rechazó asignar admin a 888Leonidas888; producción tiene como revisor a stn-jescriba. Pendiente corregir la revisión de TI. No se realizará despliegue ni fusión.
+- Entorno: Node 26.13.1, SDK .NET 11.0.100, runtime .NET 10.0.15; proyectos con destino net10.0.
+
+- Scaffold validado: 3 pruebas backend, 1 frontend y build frontend correctos; npm audit: 0 vulnerabilidades.
+- Decisión del usuario: usar la conexión que configure TI mediante ConnectionStrings__DefaultConnection. No crear ni modificar bases locales. La variable no está configurada actualmente; verificación real de SQL pendiente de TI.
+
+### Validación de la implementación
+- 13 pruebas backend correctas: arquitectura, salud, ciclo alta/consulta/edición/estado, validación, unicidad, búsqueda y metadatos SQL.
+- 18 pruebas frontend correctas: interfaz y cliente HTTP. TypeScript y build de producción correctos. npm audit: 0 vulnerabilidades al instalar.
+- Migración InitialUsers generada con EF Core 10.0.15; modelo sin cambios pendientes y script idempotente generado sin conexión a SQL Server. Crea ManagedUsers e índice único NormalizedEmail.
+- Inspección visual del directorio y formulario en navegador correcta. El error de conexión es visible y esperado mientras falta la configuración de TI.
+- Inicio real sin conexión verificado: falla explícitamente solicitando ConnectionStrings__DefaultConnection, sin crear ni modificar bases. La integración SQL real sigue pendiente de TI.
+- Backend y frontend formateados. Archivos revisados: sin credenciales, conexiones ni artefactos de build versionables.
+- CI adaptado al dominio Users y CORS configurado con el origen del frontend desplegado. Contenedores preparados; Docker no disponible en este equipo, sin validación de ejecución en contenedores.
+- Gobernanza: GitHub rechazó configurar a 888Leonidas888 como revisor. Invitación de colaboración con permiso write enviada y pendiente de aceptación; producción mantiene stn-jescriba. No se debilitó esa protección. Tras aceptar, TI debe completar la asignación de revisor.
+- Pendiente de cierre: subir rama y abrir PR. Sin fusión ni despliegue.

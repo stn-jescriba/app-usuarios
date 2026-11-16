@@ -30,7 +30,7 @@ jobs:
 
       - name: Escaneo de Secretos Expuestos (Cero Exposición)
         run: |
-          if grep -RInE "Password\s*=|User Id\s*=|AccountKey\s*=" backend/Books.Api/appsettings*.json backend/Books.Domain backend/Books.Application; then
+          if grep -RInE "Password\s*=|User Id\s*=|AccountKey\s*=" backend/Users.Api/appsettings*.json backend/Users.Domain backend/Users.Application; then
             echo "❌ ERROR DE SEGURIDAD: Se detectaron credenciales hardcodeadas en el código o appsettings."
             exit 1
           fi
@@ -42,7 +42,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Ejecutar Tests Unitarios y de Clean Architecture (xUnit)
-        run: dotnet test backend/ --configuration Release
+        run: dotnet test backend/Users.sln --configuration Release
 
   ti-gatekeeper-frontend:
     name: "Filtro TI: Frontend Tests & Build (React + TS)"
@@ -129,6 +129,12 @@ jobs:
           image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-web-qa:${{ github.sha }}
           flags: --allow-unauthenticated --port=8080
 
+      - name: Permitir el origen del frontend QA en la API
+        run: >-
+          gcloud run services update ${{ github.event.repository.name }}-api-qa
+          --region=${{ env.REGION }}
+          --update-env-vars="AllowedOrigins__0=${{ steps.deploy-web-qa.outputs.url }}"
+
   # =========================================================================
   # FASE 4: PASE A PRODUCCIÓN (Requiere Aprobación de 1 Clic del Senior TI)
   # =========================================================================
@@ -181,3 +187,9 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-web-prod:${{ github.sha }}
           flags: --allow-unauthenticated --port=8080
+
+      - name: Permitir el origen del frontend de producción en la API
+        run: >-
+          gcloud run services update ${{ github.event.repository.name }}-api-prod
+          --region=${{ env.REGION }}
+          --update-env-vars="AllowedOrigins__0=${{ steps.deploy-web-prod.outputs.url }}"
